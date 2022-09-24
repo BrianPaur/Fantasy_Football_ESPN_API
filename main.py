@@ -371,7 +371,7 @@ class FantasyFootball:
 
 def main():
     fantasyfootballdata = FantasyFootball(league_year=2022)
-    # fantasyfootballdata.write_table()
+    fantasyfootballdata.write_table()
     fantasyfootballdata.narrowest_MOV(1)
     fantasyfootballdata.largest_MOV(1)
     fantasyfootballdata.most_points_scored(1)
