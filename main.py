@@ -6,6 +6,7 @@ from os.path import exists
 from os import path
 import sqlite3
 import sqlalchemy as db
+import statistics
 
 pd.options.display.width = None
 pd.options.display.max_columns = None
@@ -16,7 +17,13 @@ pd.set_option("display.float_format", lambda x: "%.5f" % x)
 
 class FantasyFootball:
     def __init__(
-        self, league_id=608256606, league_year=2021, league_length=15, dataFrame=None, player_count=None):
+        self,
+        league_id=608256606,
+        league_year=2021,
+        league_length=15,
+        dataFrame=None,
+        player_count=None,
+    ):
         self.league_id = league_id
         self.league_year = league_year
         self.league_length = league_length
@@ -226,7 +233,9 @@ class FantasyFootball:
             f"ave_MOV number)"
         )
         data = self.dataFrame
-        self.dataFrame.to_sql(f"standings_{self.league_year}", conn, if_exists="replace", index=False)
+        self.dataFrame.to_sql(
+            f"standings_{self.league_year}", conn, if_exists="replace", index=False
+        )
 
         c.execute(
             f"""
@@ -255,6 +264,7 @@ class FantasyFootball:
 
         df = pd.read_sql(f"SELECT * FROM standings_{self.league_year}", connection)
         print(df)
+        print("\n")
 
     def least_points_scored(self, week):
         if exists("FantasyData.sqlite") == False:
@@ -265,19 +275,18 @@ class FantasyFootball:
         engine = db.create_engine("sqlite:///FantasyData.sqlite")
         connection = engine.connect()
 
-        df = pd.read_sql("SELECT * "
-                         f"FROM standings_{self.league_year}"
-                         ,connection)
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
 
-        df_low = df[f'Week {week}'].min()
+        df_low = df[f"Week {week}"].min()
 
-        df_loser = df[(df[f'Week {week}']==df_low)]
-        df_loser = df_loser[['Team Name',f'Week {week}']]
+        df_loser = df[(df[f"Week {week}"] == df_low)]
+        df_loser = df_loser[["Team Name", f"Week {week}"]]
 
-        print(f'Week {week} least points scored')
+        print(f"Week {week} least points scored")
         print(df_loser.to_string(index=False))
+        print("\n")
 
-    def most_points_scored(self,week):
+    def most_points_scored(self, week):
         if exists("FantasyData.sqlite") == False:
             self.write_table()
         else:
@@ -286,19 +295,18 @@ class FantasyFootball:
         engine = db.create_engine("sqlite:///FantasyData.sqlite")
         connection = engine.connect()
 
-        df = pd.read_sql("SELECT * "
-                         f"FROM standings_{self.league_year}"
-                         ,connection)
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
 
-        df_low = df[f'Week {week}'].max()
+        df_low = df[f"Week {week}"].max()
 
-        df_loser = df[(df[f'Week {week}']==df_low)]
-        df_loser = df_loser[['Team Name',f'Week {week}']]
+        df_loser = df[(df[f"Week {week}"] == df_low)]
+        df_loser = df_loser[["Team Name", f"Week {week}"]]
 
-        print(f'Week {week} most points scored')
+        print(f"Week {week} most points scored")
         print(df_loser.to_string(index=False))
+        print("\n")
 
-    def narrowest_MOV(self,week):
+    def most_narrow_win(self, week):
         if exists("FantasyData.sqlite") == False:
             self.write_table()
         else:
@@ -307,30 +315,28 @@ class FantasyFootball:
         engine = db.create_engine("sqlite:///FantasyData.sqlite")
         connection = engine.connect()
 
-        df = pd.read_sql("SELECT * "
-                         f"FROM standings_{self.league_year}"
-                         ,connection)
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
 
-        df_low = df[df[f'Week {week} MOV']>0]
+        df_low = df[df[f"Week {week} MOV"] > 0]
 
-        df_narrow = df_low[f'Week {week} MOV'].min()
+        df_narrow = df_low[f"Week {week} MOV"].min()
 
-        df_winner = df[(df[f'Week {week} MOV']==df_narrow)]
-        df_winner = df_winner[['Team Name', f'Week {week} MOV']]
-        df_winner_team = df_winner['Team Name']
-        df_winner_amount = df_winner[f'Week {week} MOV']
+        df_winner = df[(df[f"Week {week} MOV"] == df_narrow)]
+        df_winner = df_winner[["Team Name", f"Week {week} MOV"]]
+        df_winner_team = df_winner["Team Name"]
+        df_winner_amount = df_winner[f"Week {week} MOV"]
         winner = df_winner_team.to_string(index=False)
         winner_MOV = df_winner_amount.to_string(index=False)
 
-        df_loser = df[(df[f'Week {week} MOV'] == (df_narrow * -1))]
-        df_loser = df_loser['Team Name']
+        df_loser = df[(df[f"Week {week} MOV"] == (df_narrow * -1))]
+        df_loser = df_loser["Team Name"]
         loser = df_loser.to_string(index=False)
 
-        print(f'Week {week} most narrow win\n'
-              f'{winner} beat {loser} by {winner_MOV}')
+        print(f"Week {week} most narrow win\n" f"{winner} beat {loser} by {winner_MOV}")
+        print("\n")
         # print(df_winner.to_string(index=False))
 
-    def largest_MOV(self,week):
+    def largest_MOV(self, week):
         if exists("FantasyData.sqlite") == False:
             self.write_table()
         else:
@@ -339,44 +345,166 @@ class FantasyFootball:
         engine = db.create_engine("sqlite:///FantasyData.sqlite")
         connection = engine.connect()
 
-        df = pd.read_sql("SELECT * "
-                         f"FROM standings_{self.league_year}"
-                         ,connection)
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
 
-        df_high = df[f'Week {week} MOV'].max()
+        df_high = df[f"Week {week} MOV"].max()
 
-        df_winner = df[(df[f'Week {week} MOV']==df_high)]
-        df_winner = df_winner[['Team Name', f'Week {week} MOV']]
-        df_winner_team = df_winner['Team Name']
-        df_winner_amount = df_winner[f'Week {week} MOV']
+        df_winner = df[(df[f"Week {week} MOV"] == df_high)]
+        df_winner = df_winner[["Team Name", f"Week {week} MOV"]]
+        df_winner_team = df_winner["Team Name"]
+        df_winner_amount = df_winner[f"Week {week} MOV"]
         winner = df_winner_team.to_string(index=False)
         winner_MOV = df_winner_amount.to_string(index=False)
 
-        df_loser = df[(df[f'Week {week} MOV']==(df_high*-1))]
-        df_loser = df_loser[['Team Name',f'Week {week} MOV']]
-        df_loser_team = df_loser['Team Name']
+        df_loser = df[(df[f"Week {week} MOV"] == (df_high * -1))]
+        df_loser = df_loser[["Team Name", f"Week {week} MOV"]]
+        df_loser_team = df_loser["Team Name"]
         loser = df_loser_team.to_string(index=False)
 
-        print(f'Week {week} Largest MOV\n'
-              f'{winner} defeated {loser} by {winner_MOV} points')
+        print(
+            f"Week {week} Largest MOV\n"
+            f"{winner} defeated {loser} by {winner_MOV} points"
+        )
+        print("\n")
         # print(df_loser.to_string(index=False))
 
-    def most_efficient_team(self,week):
-        ''' logic: team that wins with the lowest MOV '''
-        pass
+    def most_efficient_team(self):
+        if exists("FantasyData.sqlite") == False:
+            self.write_table()
+        else:
+            pass
 
-    def least_efficient_team(self,week):
-        ''' logic: team that wins with the highest MOV '''
-        pass
+        engine = db.create_engine("sqlite:///FantasyData.sqlite")
+        connection = engine.connect()
+
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
+
+        df = df[["Team Name", "Ave MOV"]].sort_values(by=["Ave MOV"], ascending=True)
+        df = df[df["Ave MOV"] > 0].head(1)
+
+        print("Most Efficient Team:")
+        print(df.to_string(index=False))
+        print("\n")
+
+    def most_efficient_team_by_week(self, week):
+        if exists("FantasyData.sqlite") == False:
+            self.write_table()
+        else:
+            pass
+
+        engine = db.create_engine("sqlite:///FantasyData.sqlite")
+        connection = engine.connect()
+
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
+
+        df = df[["Team Name", f"Week {week} MOV"]].sort_values(
+            by=[f"Week {week} MOV"], ascending=True
+        )
+        df = df[df[f"Week {week} MOV"] > 0].head(1)
+
+        print(f"Most Efficient Team (Week {week}):")
+        print(df.to_string(index=False))
+        print("\n")
+
+    def least_efficient_team(self):
+        if exists("FantasyData.sqlite") == False:
+            self.write_table()
+        else:
+            pass
+
+        engine = db.create_engine("sqlite:///FantasyData.sqlite")
+        connection = engine.connect()
+
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
+
+        df = (
+            df[["Team Name", "Ave MOV"]]
+            .sort_values(by=["Ave MOV"], ascending=False)
+            .head(1)
+        )
+
+        print("Least Efficient Team:")
+        print(df.to_string(index=False))
+        print("\n")
+
+    def least_efficient_team_by_week(self, week):
+        if exists("FantasyData.sqlite") == False:
+            self.write_table()
+        else:
+            pass
+
+        engine = db.create_engine("sqlite:///FantasyData.sqlite")
+        connection = engine.connect()
+
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
+
+        df = (
+            df[["Team Name", f"Week {week} MOV"]]
+            .sort_values(by=[f"Week {week} MOV"], ascending=False)
+            .head(1)
+        )
+
+        print(f"Least Efficient Team (Week {week}):")
+        print(df.to_string(index=False))
+        print("\n")
+
+    def most_consistent(self):
+        league = League(self.league_id, self.league_year)
+        week_current = league.current_week - 1
+
+        if exists("FantasyData.sqlite") == False:
+            self.write_table()
+        else:
+            pass
+
+        engine = db.create_engine("sqlite:///FantasyData.sqlite")
+        connection = engine.connect()
+
+        df = pd.read_sql("SELECT * " f"FROM standings_{self.league_year}", connection)
+
+        df = df[
+            [
+                "Team Name",
+                "Week 1",
+                "Week 2",
+                "Week 3",
+                "Week 4",
+                "Week 5",
+                "Week 6",
+                "Week 7",
+            ]
+        ]
+
+        df1 = df.transpose(copy=True)
+        new_header = df1.iloc[0]
+        df1 = df1[1:]
+        df1.columns = new_header
+        df2 = df1.std()
+        df2 = df2.sort_values().head(1)
+        df3 = df1.mean()
+
+        print("most consistent Team:")
+        print(df2.to_string())
+        print("\n")
+        print(df3)
+
 
 def main():
+    """examples"""
+    week = 8
     fantasyfootballdata = FantasyFootball(league_year=2022)
-    # fantasyfootballdata.write_table()
-    fantasyfootballdata.narrowest_MOV(1)
-    fantasyfootballdata.largest_MOV(1)
-    fantasyfootballdata.most_points_scored(1)
-    fantasyfootballdata.least_points_scored(1)
+    fantasyfootballdata.write_table()
+    fantasyfootballdata.most_narrow_win(week)
+    fantasyfootballdata.largest_MOV(week)
+    fantasyfootballdata.most_points_scored(week)
+    fantasyfootballdata.least_points_scored(week)
+    fantasyfootballdata.most_efficient_team()
+    fantasyfootballdata.most_efficient_team_by_week(week)
+    fantasyfootballdata.least_efficient_team()
+    fantasyfootballdata.least_efficient_team_by_week(week)
+    fantasyfootballdata.most_consistent()
     fantasyfootballdata.read_table()
+
 
 if __name__ == "__main__":
     main()
